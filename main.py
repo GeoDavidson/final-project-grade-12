@@ -1,3 +1,7 @@
+# To-Do
+# 1) Fix Collisions
+# 2) Change to Delta Time
+
 import pygame
 import sys
 import math
