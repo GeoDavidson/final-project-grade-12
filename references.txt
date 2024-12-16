@@ -1,0 +1,8 @@
+Please reference all work here:
+
+# image references(include the URL and a brief explanation of what you used from this source):
+
+# coding references(include the URL and a brief explanation of the idea/solution that you used from this source.)
+https://www.jeffreythompson.org/collision-detection/circle-rect.php - used for collision
+
+# other references:
