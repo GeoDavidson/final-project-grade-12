@@ -2,27 +2,19 @@ import pygame
 import sys
 import math
 
-# inits
-#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 pygame.init()
 
-# define screen size
 WINDOW_WIDTH = 768 # 48 * 16
 WINDOW_HEIGHT = 432 # 48 * 9
 
-# create game window
 window = pygame.display.set_mode((WINDOW_WIDTH, WINDOW_HEIGHT))
 pygame.display.set_caption("Gliding Game")
 
-# frame rate
 clock = pygame.time.Clock()
 FPS = 60
 
-# tiles
 tileGroup = []
 
-# classes and functions
-#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 class Player:
     def __init__(self, x, y, color, radius):
         self.x = x
@@ -57,7 +49,7 @@ class Tile:
     def draw(self, window):
         pygame.draw.rect(window, self.color, (self.x, self.y, self.width, self.height))
 
-def playerTileCollision(): # don't want to do player stuff in collision
+def playerTileCollision():
     for tile in tileGroup:
         tempX = player.x
         tempY = player.y
@@ -79,39 +71,28 @@ def playerTileCollision(): # don't want to do player stuff in collision
         distanceY = player.y - tempY
         distance = math.sqrt((distanceX*distanceX) + (distanceY*distanceY))
         if distance < player.radius:
-            return True, side
-        return False, side
 
-            # if side == "left" and player.velocity.x > 0:
-            #     print("left")
-            #     player.velocity.x = player.velocity.x * -1
-            # elif side == "right" and player.velocity.x < 0:
-            #     print("right")
-            #     player.velocity.x = player.velocity.x * -1
-            # if side == "top" and player.velocity.y > 0:
-            #     print("top")
-            #     player.velocity.y = -abs(player.velocity.y / 1.6)
-            #     if player.velocity.y > -0.5:
-            #         player.velocity.y = 0
-            # elif side == "bottom" and player.velocity.y < 0:
-            #     print("bottom")
-            #     player.velocity.y = 0
-print(playerTileCollision())
+            if side == "left" and player.velocity.x > 0:
+                player.velocity.x = player.velocity.x * -1
+            elif side == "right" and player.velocity.x < 0:
+                player.velocity.x = player.velocity.x * -1
+            if side == "top" and player.velocity.y > 0:
+                player.velocity.y = -10
+            elif side == "bottom" and player.velocity.y < 0:
+                player.velocity.y = 0
+
 # player
 player = Player(48 * 5, 48, (255, 0, 0), 24)
 
+# load map
 map = open("map.txt", "r")
-
 for rowIndex, rowIterable in enumerate(map.readlines()):
     for columnIndex, columnIterable in enumerate(rowIterable):
         if columnIterable == "1":
             tile = Tile(columnIndex * 48, rowIndex * 48, (0, 0, 0), 48, 48)
             tileGroup.append(tile)
-
 map.close()
 
-# main
-#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 def main():
     while True:
         for event in pygame.event.get():
@@ -133,7 +114,7 @@ def main():
 
         player.updatePosition()
 
-        # draw background
+        # draw
         window.fill((255, 255, 255))
 
         player.draw(window)
@@ -141,10 +122,8 @@ def main():
         for tile in tileGroup:
             tile.draw(window)
         
-        # nothing here yet
         clock.tick(FPS)
 
-        # update display
         pygame.display.update()
 
 if __name__ == "__main__":
