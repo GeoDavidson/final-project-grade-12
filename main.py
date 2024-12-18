@@ -23,8 +23,7 @@ class Player:
         self.color = color
         self.radius = radius
 
-        self.velocity = pygame.Vector2(0, 0)
-        # self.velocity = pygame.Vector2(6, 0)
+        self.velocity = pygame.Vector2(6, 0)
 
         self.nearestTile = pygame.Vector2(0, 0)
         self.nearestPosition = pygame.Vector2(0, 0)
@@ -48,20 +47,20 @@ class Player:
             bottom = abs((self.y - self.radius) - (tile.y + tile.height))
 
             if left < right and left < top and left < bottom and self.velocity.x >= 0: # left
-                self.velocity.x = self.velocity.x * -1 / 2
-                # self.velocity.x = self.velocity.x * -1
+                # self.velocity.x = self.velocity.x * -1 / 2
+                self.velocity.x = self.velocity.x * -1
                 if self.velocity.x > -1:
                     self.velocity.x = 0
                 self.x += distance - self.radius
             elif right < left and right < top and right < bottom and self.velocity.x <= 0: # right
-                self.velocity.x = self.velocity.x * -1 / 2
-                # self.velocity.x = self.velocity.x * -1
+                # self.velocity.x = self.velocity.x * -1 / 2
+                self.velocity.x = self.velocity.x * -1
                 if self.velocity.x < 1:
                     self.velocity.x = 0
                 self.x -= distance - self.radius
             elif top < left and top < right and top < bottom and self.velocity.y >= 0: # top
-                self.velocity.y = self.velocity.y / -2
-                # self.velocity.y = -11
+                # self.velocity.y = self.velocity.y / -2
+                self.velocity.y = -11
                 if self.velocity.y > -1:
                     self.velocity.y = 0
                 self.y += distance - self.radius
