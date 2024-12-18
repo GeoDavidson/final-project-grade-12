@@ -1,10 +1,7 @@
-# To-Do
-# 1) Fix Collisions
-# 2) Change to Delta Time
-
 import pygame
 import sys
 import math
+import random
 
 pygame.init()
 
@@ -27,20 +24,59 @@ class Player:
         self.radius = radius
 
         self.velocity = pygame.Vector2(3, 0)
+        self.nearestTile = pygame.Vector2(0, 0)
 
-    def updateGravity(self):
-        self.velocity.y += 0.35
+    def update(self):
+        self.velocity.y += 0.6
 
-    def getInput(self):
         if pygame.key.get_pressed()[pygame.K_SPACE]:
             self.velocity.y = -10
 
-    def updatePosition(self):
+        tileDistance = 1000
+        tileIndex = 0
+        for i in range(len(tileGroup)):
+            d = math.sqrt(((tileGroup[i].x + 24) - self.x) ** 2 + ((tileGroup[i].y + 24) - self.y) ** 2)
+            if d < tileDistance:
+                tileDistance = d
+                tileIndex = i
+        
+        self.nearestTile.x = tileGroup[tileIndex].x + 24
+        self.nearestTile.y = tileGroup[tileIndex].y + 24
+
+        nearestX = max(tileGroup[tileIndex].x, min(self.x, tileGroup[tileIndex].x + tileGroup[tileIndex].width))
+        nearestY = max(tileGroup[tileIndex].y, min(self.y, tileGroup[tileIndex].y + tileGroup[tileIndex].height))
+
+        distance = math.sqrt((nearestX - self.x) ** 2 + (nearestY - self.y) ** 2)
+        if distance <= self.radius:
+            left = abs((self.x + self.radius) - tileGroup[tileIndex].x)
+            right = abs((self.x - self.radius) - (tileGroup[tileIndex].x + tileGroup[tileIndex].width))
+            top = abs((self.y + self.radius) - tileGroup[tileIndex].y)
+            bottom = abs((self.y - self.radius) - (tileGroup[tileIndex].y + tileGroup[tileIndex].height))
+
+            if left < right and left < top and left < bottom and self.velocity.x > 0:
+                print("LEFT")
+                self.velocity.x = self.velocity.x * -1
+                self.x = tileGroup[tileIndex].x - self.radius
+            elif right < left and right < top and right < bottom and self.velocity.x < 0:
+                print("RIGHT")
+                self.velocity.x = self.velocity.x * -1
+                self.x = tileGroup[tileIndex].x + tileGroup[tileIndex].width + self.radius
+            elif top < left and top < right and top < bottom and self.velocity.y > 0:
+                print("TOP")
+                self.velocity.y = self.velocity.y / -1.35
+                self.y = tileGroup[tileIndex].y - self.radius
+            elif bottom < left and bottom < right and bottom < top and self.velocity.y < 0:
+                print("BOTTOM")
+                self.velocity.y = 0
+                self.y = tileGroup[tileIndex].y + tileGroup[tileIndex].width + self.radius
+        
         self.x += self.velocity.x
         self.y += self.velocity.y
-  
+
+
     def draw(self, window):
         pygame.draw.circle(window, self.color, (self.x, self.y), self.radius)
+        pygame.draw.line(window, (0, 0, 255), (self.x, self.y), self.nearestTile)
 
 class Tile:
     def __init__(self, x, y, color, width, height):
@@ -53,38 +89,6 @@ class Tile:
     def draw(self, window):
         pygame.draw.rect(window, self.color, (self.x, self.y, self.width, self.height))
 
-def playerTileCollision():
-    for tile in tileGroup:
-        tempX = player.x
-        tempY = player.y
-        side = "none"
-        if player.x < tile.x: # left edge
-            tempX = tile.x
-            side = "left"
-        elif player.x > tile.x + tile.width: # right edge
-            tempX = tile.x + tile.width
-            side = "right"
-        if player.y < tile.y: # top edge
-            tempY = tile.y
-            side = "top"
-        elif player.y > tile.y + tile.height: # bottom edge
-            tempY = tile.y + tile.height
-            side = "bottom"
-
-        distanceX = player.x - tempX
-        distanceY = player.y - tempY
-        distance = math.sqrt((distanceX*distanceX) + (distanceY*distanceY))
-        if distance < player.radius:
-
-            if side == "left" and player.velocity.x > 0:
-                player.velocity.x = player.velocity.x * -1
-            elif side == "right" and player.velocity.x < 0:
-                player.velocity.x = player.velocity.x * -1
-            if side == "top" and player.velocity.y > 0:
-                player.velocity.y = -10
-            elif side == "bottom" and player.velocity.y < 0:
-                player.velocity.y = 0
-
 # player
 player = Player(48 * 5, 48, (255, 0, 0), 24)
 
@@ -93,7 +97,8 @@ map = open("map.txt", "r")
 for rowIndex, rowIterable in enumerate(map.readlines()):
     for columnIndex, columnIterable in enumerate(rowIterable):
         if columnIterable == "1":
-            tile = Tile(columnIndex * 48, rowIndex * 48, (0, 0, 0), 48, 48)
+            n = random.randint(0, 148)
+            tile = Tile(columnIndex * 48, rowIndex * 48, (n, n, n), 48, 48)
             tileGroup.append(tile)
 map.close()
 
@@ -110,13 +115,7 @@ def main():
                     sys.exit()
 
         # update
-        player.updateGravity()
-
-        player.getInput()
-
-        playerTileCollision()
-
-        player.updatePosition()
+        player.update()
 
         # draw
         window.fill((255, 255, 255))
