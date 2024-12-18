@@ -23,60 +23,89 @@ class Player:
         self.color = color
         self.radius = radius
 
-        self.velocity = pygame.Vector2(3, 0)
+        self.velocity = pygame.Vector2(0, 0)
+
         self.nearestTile = pygame.Vector2(0, 0)
+        self.nearestPosition = pygame.Vector2(0, 0)
 
     def update(self):
-        self.velocity.y += 0.6
+        tile = min(tileGroup, key=lambda tile: math.sqrt(((tile.x + tile.width / 2) - self.x) ** 2 + ((tile.y + tile.height / 2) - self.y) ** 2))
 
-        if pygame.key.get_pressed()[pygame.K_SPACE]:
-            self.velocity.y = -10
+        nearestX = max(tile.x, min(self.x, tile.x + tile.width))
+        nearestY = max(tile.y, min(self.y, tile.y + tile.height))
 
-        tileDistance = 1000
-        tileIndex = 0
-        for i in range(len(tileGroup)):
-            d = math.sqrt(((tileGroup[i].x + 24) - self.x) ** 2 + ((tileGroup[i].y + 24) - self.y) ** 2)
-            if d < tileDistance:
-                tileDistance = d
-                tileIndex = i
-        
-        self.nearestTile.x = tileGroup[tileIndex].x + 24
-        self.nearestTile.y = tileGroup[tileIndex].y + 24
+        self.nearestTile.x = tile.x + tile.width / 2
+        self.nearestTile.y = tile.y + tile.height / 2
+        self.nearestPosition.x = nearestX
+        self.nearestPosition.y = nearestY
 
-        nearestX = max(tileGroup[tileIndex].x, min(self.x, tileGroup[tileIndex].x + tileGroup[tileIndex].width))
-        nearestY = max(tileGroup[tileIndex].y, min(self.y, tileGroup[tileIndex].y + tileGroup[tileIndex].height))
+        angle = int(round(math.degrees(math.atan2(self.nearestPosition.y - self.y, self.nearestPosition.x - self.x)), 0))
 
         distance = math.sqrt((nearestX - self.x) ** 2 + (nearestY - self.y) ** 2)
         if distance <= self.radius:
-            left = abs((self.x + self.radius) - tileGroup[tileIndex].x)
-            right = abs((self.x - self.radius) - (tileGroup[tileIndex].x + tileGroup[tileIndex].width))
-            top = abs((self.y + self.radius) - tileGroup[tileIndex].y)
-            bottom = abs((self.y - self.radius) - (tileGroup[tileIndex].y + tileGroup[tileIndex].height))
+            left = abs((self.x + self.radius) - tile.x)
+            right = abs((self.x - self.radius) - (tile.x + tile.width))
+            top = abs((self.y + self.radius) - tile.y)
+            bottom = abs((self.y - self.radius) - (tile.y + tile.height))
 
-            if left < right and left < top and left < bottom and self.velocity.x > 0:
-                print("LEFT")
-                self.velocity.x = self.velocity.x * -1
-                self.x = tileGroup[tileIndex].x - self.radius
-            elif right < left and right < top and right < bottom and self.velocity.x < 0:
-                print("RIGHT")
-                self.velocity.x = self.velocity.x * -1
-                self.x = tileGroup[tileIndex].x + tileGroup[tileIndex].width + self.radius
-            elif top < left and top < right and top < bottom and self.velocity.y > 0:
-                print("TOP")
-                self.velocity.y = self.velocity.y / -1.35
-                self.y = tileGroup[tileIndex].y - self.radius
-            elif bottom < left and bottom < right and bottom < top and self.velocity.y < 0:
-                print("BOTTOM")
+            if left < right and left < top and left < bottom: # left
+                # self.velocity.x = self.velocity.x * -1 / 2
+                # if self.velocity.x > -1:
+                    # self.velocity.x = 0
+                self.velocity.x = 0
+                # if angle == 0:
+                # self.x = tile.x - self.radius
+                # else:
+                self.x += distance - self.radius
+            elif right < left and right < top and right < bottom: # right
+                # self.velocity.x = self.velocity.x * -1 / 2
+                # if self.velocity.x < 1:
+                    # self.velocity.x = 0
+                self.velocity.x = 0
+                # if angle == 180:
+                # self.x = tile.x + tile.width + self.radius
+                # else:
+                self.x -= distance - self.radius
+            elif top < left and top < right and top < bottom: # top
+                # self.velocity.y = self.velocity.y / -2
+                # if self.velocity.y > -1:
+                #     self.velocity.y = 0
                 self.velocity.y = 0
-                self.y = tileGroup[tileIndex].y + tileGroup[tileIndex].width + self.radius
-        
-        self.x += self.velocity.x
+                # if angle == 90:
+                # self.y = tile.y - self.radius
+                # else:
+                self.y += distance - self.radius
+            elif bottom < left and bottom < right and bottom: # bottom
+                # self.velocity.y = self.velocity.y / -2
+                # if self.velocity.y < 1:
+                    # self.velocity.y = 0
+                self.velocity.y = 0
+                # if angle == -90:
+                # self.y = tile.y + tile.height + self.radius
+                # else:
+                self.y -= distance - self.radius
+
+        if pygame.key.get_pressed()[pygame.K_a]:
+            if self.velocity.x > -1.5:
+                self.velocity.x -= 0.4
+
+        if pygame.key.get_pressed()[pygame.K_d]:
+            if self.velocity.x < 1.5:
+                self.velocity.x += 0.4
+
+        if pygame.key.get_pressed()[pygame.K_SPACE]:
+            self.velocity.y -= 0.1
+        else:
+            self.velocity.y += 0.1
+
         self.y += self.velocity.y
+        self.x += self.velocity.x
 
 
     def draw(self, window):
         pygame.draw.circle(window, self.color, (self.x, self.y), self.radius)
-        pygame.draw.line(window, (0, 0, 255), (self.x, self.y), self.nearestTile)
+        pygame.draw.line(window, (0, 255, 0), (self.x, self.y), self.nearestTile)
+        pygame.draw.line(window, (0, 0, 255), (self.x, self.y), self.nearestPosition)
 
 class Tile:
     def __init__(self, x, y, color, width, height):
@@ -90,7 +119,7 @@ class Tile:
         pygame.draw.rect(window, self.color, (self.x, self.y, self.width, self.height))
 
 # player
-player = Player(48 * 5, 48, (255, 0, 0), 24)
+player = Player(48 * 5, 48 * 5, (255, 0, 0), 24)
 
 # load map
 map = open("map.txt", "r")
