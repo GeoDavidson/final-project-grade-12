@@ -29,6 +29,8 @@ class Player:
 
         self.velocity = pygame.Vector2(0, 0)
 
+        self.grounded = False
+
     def update(self):
         keys = pygame.key.get_pressed()
         if keys[pygame.K_a]:
@@ -57,10 +59,13 @@ class Player:
                         self.velocity.x *= -1 / 2
                     self.x = tile.x - self.width
 
-        if keys[pygame.K_w]:
-            self.velocity.y -= 0.425
-        else: 
-            self.velocity.y += 0.425
+        if self.velocity.y > 0:
+            self.velocity.y += 0.775
+        elif keys[pygame.K_SPACE] and self.grounded:
+            self.grounded = False
+            self.velocity.y = -8
+        else:
+            self.velocity.y += 0.6
 
         self.y += self.velocity.y
 
@@ -70,11 +75,17 @@ class Player:
                     self.velocity.y = 0
                     self.y = tile.y + tile.height
                 elif self.velocity.y > 0:
+
+                    self.grounded = True
+
                     self.velocity.y = 0
                     self.y = tile.y - self.height
 
         for launchTile in launchTileGroup:
             if collided(self, launchTile):
+
+                self.grounded = False
+
                 self.velocity.y = -12
                 return None
 
@@ -132,7 +143,7 @@ def loadLevel(levelName):
                 killTile = Tile(columnIndex * 48, rowIndex * 48 + 44, (255, 0, 0), 48, 4)
                 killTileGroup.append(killTile)
             elif columnIterable == "P":
-                player = Player(columnIndex * 48, rowIndex * 48, (255, 0, 0), 24, 24)
+                player = Player(columnIndex * 48, rowIndex * 48, (255, 0, 0), 12, 18)
                 playerGroup.append(player)
     map.close()
 
