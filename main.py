@@ -30,33 +30,34 @@ class Player:
         self.velocity = pygame.Vector2(0, 0)
 
     def update(self):
-        if pygame.key.get_pressed()[pygame.K_a]:
+        keys = pygame.key.get_pressed()
+        if keys[pygame.K_a]:
             if self.velocity.x > -4:
                 self.velocity.x -= 1
 
-        if pygame.key.get_pressed()[pygame.K_d]:
+        if keys[pygame.K_d]:
             if self.velocity.x < 4:
                 self.velocity.x += 1
 
-        self.velocity.x /= 1.1
+        self.velocity.x /= 1.15
         self.x += self.velocity.x
 
         for tile in tileGroup:
             if collided(self, tile):
                 if self.velocity.x < 0:
-                    if pygame.key.get_pressed()[pygame.K_a]:
+                    if keys[pygame.K_a]:
                         self.velocity.x = 0
                     else:
                         self.velocity.x *= -1 / 2
                     self.x = tile.x + tile.width
                 elif self.velocity.x > 0:
-                    if pygame.key.get_pressed()[pygame.K_d]:
+                    if keys[pygame.K_d]:
                         self.velocity.x = 0
                     else:
                         self.velocity.x *= -1 / 2
                     self.x = tile.x - self.width
 
-        if pygame.key.get_pressed()[pygame.K_w]:
+        if keys[pygame.K_w]:
             self.velocity.y -= 0.425
         else: 
             self.velocity.y += 0.425
@@ -69,16 +70,18 @@ class Player:
                     self.velocity.y = 0
                     self.y = tile.y + tile.height
                 elif self.velocity.y > 0:
-                    self.velocity.y *= -1 / 2
+                    self.velocity.y = 0
                     self.y = tile.y - self.height
 
         for launchTile in launchTileGroup:
             if collided(self, launchTile):
                 self.velocity.y = -12
+                return None
 
         for killTile in killTileGroup:
             if collided(self, killTile):
                 loadLevel("map.txt")
+                return None
 
     def draw(self, window):
         pygame.draw.rect(window, self.color, (self.x, self.y, self.width, self.height))
