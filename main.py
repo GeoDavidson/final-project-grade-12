@@ -29,6 +29,19 @@ class Player:
         self.nearestPosition = pygame.Vector2(0, 0)
 
     def update(self):
+        if pygame.key.get_pressed()[pygame.K_a]:
+            if self.velocity.x > -4.5:
+                self.velocity.x -= 0.4
+
+        if pygame.key.get_pressed()[pygame.K_d]:
+            if self.velocity.x < 4.5:
+                self.velocity.x += 0.4
+
+        if pygame.key.get_pressed()[pygame.K_SPACE]:
+            self.velocity.y -= 0.35
+        else:
+            self.velocity.y += 0.35
+
         tile = min(tileGroup, key=lambda tile: math.sqrt(((tile.x + tile.width / 2) - self.x) ** 2 + ((tile.y + tile.height / 2) - self.y) ** 2))
 
         nearestX = max(tile.x, min(self.x, tile.x + tile.width))
@@ -47,41 +60,25 @@ class Player:
             bottom = abs((self.y - self.radius) - (tile.y + tile.height))
 
             if left < right and left < top and left < bottom and self.velocity.x >= 0: # left
-                # self.velocity.x = self.velocity.x * -1 / 2
-                self.velocity.x = self.velocity.x * -1
-                if self.velocity.x > -1:
+                self.velocity.x = self.velocity.x * -1 / 2
+                if -1 < self.velocity.x < 1:
                     self.velocity.x = 0
                 self.x += distance - self.radius
             elif right < left and right < top and right < bottom and self.velocity.x <= 0: # right
-                # self.velocity.x = self.velocity.x * -1 / 2
-                self.velocity.x = self.velocity.x * -1
-                if self.velocity.x < 1:
+                self.velocity.x = self.velocity.x * -1 / 2
+                if -1 < self.velocity.x < 1:
                     self.velocity.x = 0
                 self.x -= distance - self.radius
             elif top < left and top < right and top < bottom and self.velocity.y >= 0: # top
-                # self.velocity.y = self.velocity.y / -2
-                self.velocity.y = -11
-                if self.velocity.y > -1:
+                self.velocity.y = self.velocity.y / -2
+                if -1 < self.velocity.y < 1:
                     self.velocity.y = 0
                 self.y += distance - self.radius
             elif bottom < left and bottom < right and bottom and self.velocity.y < 0: # bottom
                 self.velocity.y = self.velocity.y / -2
-                if self.velocity.y < 1:
+                if -1 < self.velocity.y < 1:
                     self.velocity.y = 0
                 self.y -= distance - self.radius
-
-        if pygame.key.get_pressed()[pygame.K_a]:
-            if self.velocity.x > -4.5:
-                self.velocity.x -= 0.4
-
-        if pygame.key.get_pressed()[pygame.K_d]:
-            if self.velocity.x < 4.5:
-                self.velocity.x += 0.4
-
-        if pygame.key.get_pressed()[pygame.K_SPACE]:
-            self.velocity.y -= 0.35
-        else:
-            self.velocity.y += 0.35
 
         self.y += self.velocity.y
         self.x += self.velocity.x
