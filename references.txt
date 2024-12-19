@@ -4,6 +4,6 @@ Please reference all work here:
 
 # coding references(include the URL and a brief explanation of the idea/solution that you used from this source.)
 
-1. https://www.jeffreythompson.org/collision-detection/circle-rect.php - This was used to help with collisions between circles and rectangles.
+1. https://www.jeffreythompson.org/collision-detection/rect-rect.php - collision
 
 # other references:
