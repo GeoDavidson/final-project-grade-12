@@ -1,9 +1,15 @@
-TTTTTTTTTTTTTTTT
-T              T
-T              T
-T              T
-T              T
-T              T
-T       T      T
-T P  TTKTL     T
-TTTTTTTTTTTTTTTT
+TTTTTTTTTTTTTTTTTTTTT
+T                T  T
+T                T  T
+T  T  T T   T    T  T
+T  T  T T   T    T  T
+T  T  T T   T    T  T
+T  T  T T   T       T
+T  T  T T   T       T
+T  T        T       T
+T  T        T T  TTTT
+T  T          T     T
+T             TT    T
+T      TT           T
+T P TKKTT   L     TTT
+TTTTTTTTTTTTTTTTTTTTT

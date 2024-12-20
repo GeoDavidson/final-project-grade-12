@@ -5,8 +5,8 @@ import pygame
 
 pygame.init()
 
-WINDOW_WIDTH = 768 # 48 * 16
-WINDOW_HEIGHT = 432 # 48 * 9
+WINDOW_WIDTH = 36 * 21
+WINDOW_HEIGHT = 36 * 15
 
 window = pygame.display.set_mode((WINDOW_WIDTH, WINDOW_HEIGHT))
 pygame.display.set_caption("Gliding Game")
@@ -30,61 +30,103 @@ class Player:
         self.velocity = pygame.Vector2(0, 0)
 
         self.grounded = False
+        self.launched = False
+        self.spaceHeld = False
+
+        self.direction = 0
+
+        self.wallJumpStrafeTimer = 0
+        self.wallJumpBufferTimer = 0
 
     def update(self):
         keys = pygame.key.get_pressed()
-        if keys[pygame.K_a]:
+        if keys[pygame.K_a] and self.wallJumpStrafeTimer <= 0:
             if self.velocity.x > -4:
-                self.velocity.x -= 1
+                self.velocity.x -= 2
 
-        if keys[pygame.K_d]:
+        if keys[pygame.K_d] and self.wallJumpStrafeTimer <= 0:
             if self.velocity.x < 4:
-                self.velocity.x += 1
+                self.velocity.x += 2
 
-        self.velocity.x /= 1.15
+        if self.wallJumpStrafeTimer <= 0:
+            self.velocity.x /= 1.15
+
+        self.wallJumpStrafeTimer -= 1 / 60
+
+        if keys[pygame.K_SPACE] and not self.spaceHeld and not self.grounded and self.wallJumpBufferTimer > 0:
+            self.spaceHeld = True
+            self.wallJumpBufferTimer = 0
+            self.velocity.x = self.direction * 6
+            self.velocity.y = -10
+            self.wallJumpStrafeTimer = 0.2
+        
+        self.wallJumpBufferTimer -= 1 / 60
+
         self.x += self.velocity.x
 
         for tile in tileGroup:
             if collided(self, tile):
+                self.wallJumpStrafeTimer = 0
                 if self.velocity.x < 0:
+                    self.velocity.x = 0
+                    self.direction = 1
                     if keys[pygame.K_a]:
-                        self.velocity.x = 0
-                    else:
-                        self.velocity.x *= -1 / 2
+                        self.wallJumpBufferTimer = 0.12
+                        if self.velocity.y > 1.6:
+                            self.velocity.y = 1.6
                     self.x = tile.x + tile.width
                 elif self.velocity.x > 0:
+                    self.velocity.x = 0
+                    self.direction = -1
                     if keys[pygame.K_d]:
-                        self.velocity.x = 0
-                    else:
-                        self.velocity.x *= -1 / 2
+                        self.wallJumpBufferTimer = 0.12
+                        if self.velocity.y > 1.6:
+                            self.velocity.y = 1.6
+
                     self.x = tile.x - self.width
 
+        if not keys[pygame.K_SPACE]:
+            self.spaceHeld = False
+
         if self.velocity.y > 0:
-            self.velocity.y += 0.775
-        elif keys[pygame.K_SPACE] and self.grounded:
+            self.velocity.y += 0.8
             self.grounded = False
-            self.velocity.y = -8
+        elif keys[pygame.K_SPACE]:
+            if self.grounded and not self.spaceHeld:
+                self.grounded = False
+                self.spaceHeld = True
+                self.velocity.y = -10
+            self.velocity.y += 0.55
         else:
-            self.velocity.y += 0.6
+            if self.launched:
+                self.velocity.y += 0.55
+            else:
+                self.velocity.y += 1.6
+
+        if self.velocity.y >= 8:
+            self.velocity.y = 8
 
         self.y += self.velocity.y
 
         for tile in tileGroup:
             if collided(self, tile):
+                self.wallJumpStrafeTimer = 0
                 if self.velocity.y < 0:
                     self.velocity.y = 0
                     self.y = tile.y + tile.height
                 elif self.velocity.y > 0:
-
                     self.grounded = True
+                    self.launched = False
+
+                    self.wallJumpBufferTimer = 0
 
                     self.velocity.y = 0
                     self.y = tile.y - self.height
 
         for launchTile in launchTileGroup:
             if collided(self, launchTile):
-
                 self.grounded = False
+                self.launched = True
 
                 self.velocity.y = -12
                 return None
@@ -134,16 +176,16 @@ def loadLevel(levelName):
         for columnIndex, columnIterable in enumerate(rowIterable):
             if columnIterable == "T":
                 n = random.randint(0, 148)
-                tile = Tile(columnIndex * 48, rowIndex * 48, (n, n, n), 48, 48)
+                tile = Tile(columnIndex * 36, rowIndex * 36, (n, n, n), 36, 36)
                 tileGroup.append(tile)
             elif columnIterable == "L":
-                launchTile = Tile(columnIndex * 48, rowIndex * 48 + 40, (0, 255, 0), 48, 8)
+                launchTile = Tile(columnIndex * 36, rowIndex * 36 + 28, (0, 255, 0), 36, 8)
                 launchTileGroup.append(launchTile)
             elif columnIterable == "K":
-                killTile = Tile(columnIndex * 48, rowIndex * 48 + 44, (255, 0, 0), 48, 4)
+                killTile = Tile(columnIndex * 36, rowIndex * 36 + 32, (255, 0, 0), 36, 4)
                 killTileGroup.append(killTile)
             elif columnIterable == "P":
-                player = Player(columnIndex * 48, rowIndex * 48, (255, 0, 0), 12, 18)
+                player = Player(columnIndex * 36, rowIndex * 36, (255, 0, 0), 12, 18)
                 playerGroup.append(player)
     map.close()
 
