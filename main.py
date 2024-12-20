@@ -27,108 +27,122 @@ class Player:
         self.width = width
         self.height = height
 
+        self.speed = 2
+        self.maxSpeed = 3.8
+
+        self.friction = 1.15
+        self.wallFriction = 1.4
+
+        self.wallJumpForceX = 12
+        self.wallJumpForceY = -10
+
+        self.wallJumpBufferTime = 0.12
+
+        self.jumpForce = -10
+
+        self.defaultGravity = 0.775
+        self.jumpGravity = 0.55
+        self.upwardsGravity = 1.6
+
+        self.maxFallSpeed = 8
+
+        self.launchPadJumpForce = -14
+
+        self.wallJumpForceXValue = self.wallJumpForceX
+
         self.velocity = pygame.Vector2(0, 0)
 
         self.grounded = False
         self.launched = False
         self.spaceHeld = False
 
-        self.direction = 0
-
-        self.wallJumpStrafeTimer = 0
+        self.wallJumpDirection = 0
         self.wallJumpBufferTimer = 0
-
+    
     def update(self):
         keys = pygame.key.get_pressed()
-        if keys[pygame.K_a] and self.wallJumpStrafeTimer <= 0:
-            if self.velocity.x > -4:
-                self.velocity.x -= 2
+        if keys[pygame.K_a]:
+            if self.velocity.x > -self.maxSpeed:
+                self.velocity.x -= self.speed
 
-        if keys[pygame.K_d] and self.wallJumpStrafeTimer <= 0:
-            if self.velocity.x < 4:
-                self.velocity.x += 2
+        if keys[pygame.K_d]:
+            if self.velocity.x < self.maxSpeed:
+                self.velocity.x += self.speed
 
-        if self.wallJumpStrafeTimer <= 0:
-            self.velocity.x /= 1.15
-
-        self.wallJumpStrafeTimer -= 1 / 60
+        self.velocity.x /= self.friction
 
         if keys[pygame.K_SPACE] and not self.spaceHeld and not self.grounded and self.wallJumpBufferTimer > 0:
             self.spaceHeld = True
             self.wallJumpBufferTimer = 0
-            self.velocity.x = self.direction * 6
-            self.velocity.y = -10
-            self.wallJumpStrafeTimer = 0.2
-        
+            self.velocity.x = self.wallJumpForceX
+            self.velocity.y = self.wallJumpForceY
+
         self.wallJumpBufferTimer -= 1 / 60
 
         self.x += self.velocity.x
 
         for tile in tileGroup:
             if collided(self, tile):
-                self.wallJumpStrafeTimer = 0
-                if self.velocity.x < 0:
+                if self.velocity.x < 0: # left
                     self.velocity.x = 0
-                    self.direction = 1
-                    if keys[pygame.K_a]:
-                        self.wallJumpBufferTimer = 0.12
-                        if self.velocity.y > 1.6:
-                            self.velocity.y = 1.6
                     self.x = tile.x + tile.width
-                elif self.velocity.x > 0:
-                    self.velocity.x = 0
-                    self.direction = -1
-                    if keys[pygame.K_d]:
-                        self.wallJumpBufferTimer = 0.12
-                        if self.velocity.y > 1.6:
-                            self.velocity.y = 1.6
 
+                    if keys[pygame.K_a]:
+                        self.wallJumpForceX = self.wallJumpForceXValue
+                        self.wallJumpBufferTimer = self.wallJumpBufferTime
+                        if self.velocity.y > self.wallFriction:
+                            self.velocity.y = self.wallFriction
+                elif self.velocity.x > 0: # right
+                    self.velocity.x = 0
                     self.x = tile.x - self.width
+
+                    if keys[pygame.K_d]:
+                        self.wallJumpForceX = -self.wallJumpForceXValue
+                        self.wallJumpBufferTimer = self.wallJumpBufferTime
+                        if self.velocity.y > self.wallFriction:
+                            self.velocity.y = self.wallFriction
 
         if not keys[pygame.K_SPACE]:
             self.spaceHeld = False
 
         if self.velocity.y > 0:
-            self.velocity.y += 0.8
+            self.velocity.y += self.defaultGravity
             self.grounded = False
         elif keys[pygame.K_SPACE]:
             if self.grounded and not self.spaceHeld:
                 self.grounded = False
                 self.spaceHeld = True
-                self.velocity.y = -10
-            self.velocity.y += 0.55
+                self.velocity.y = self.jumpForce
+            self.velocity.y += self.jumpGravity
         else:
             if self.launched:
-                self.velocity.y += 0.55
+                self.velocity.y += self.jumpGravity
             else:
-                self.velocity.y += 1.6
+                self.velocity.y += self.upwardsGravity
 
-        if self.velocity.y >= 8:
-            self.velocity.y = 8
+        if self.velocity.y >= self.maxFallSpeed:
+            self.velocity.y = self.maxFallSpeed
 
         self.y += self.velocity.y
 
         for tile in tileGroup:
             if collided(self, tile):
-                self.wallJumpStrafeTimer = 0
-                if self.velocity.y < 0:
+                if self.velocity.y < 0: # top
                     self.velocity.y = 0
                     self.y = tile.y + tile.height
-                elif self.velocity.y > 0:
-                    self.grounded = True
-                    self.launched = False
-
-                    self.wallJumpBufferTimer = 0
-
+                elif self.velocity.y > 0: # bottom
                     self.velocity.y = 0
                     self.y = tile.y - self.height
+
+                    self.grounded = True
+                    self.launched = False
+                    self.wallJumpBufferTimer = 0
 
         for launchTile in launchTileGroup:
             if collided(self, launchTile):
                 self.grounded = False
                 self.launched = True
-
-                self.velocity.y = -12
+                self.velocity.y = self.launchPadJumpForce
                 return None
 
         for killTile in killTileGroup:
