@@ -15,6 +15,7 @@ clock = pygame.time.Clock()
 FPS = 60
 
 playerGroup = []
+enemyGroup = []
 tileGroup = []
 launchTileGroup = []
 killTileGroup = []
@@ -36,7 +37,7 @@ class Player:
         self.wallJumpForceX = 12
         self.wallJumpForceY = -10
 
-        self.wallJumpBufferTime = 0.12
+        self.wallJumpBufferTime = 0.1
 
         self.jumpForce = -10
 
@@ -58,7 +59,7 @@ class Player:
 
         self.wallJumpDirection = 0
         self.wallJumpBufferTimer = 0
-    
+
     def update(self):
         keys = pygame.key.get_pressed()
         if keys[pygame.K_a]:
@@ -123,7 +124,15 @@ class Player:
         if self.velocity.y >= self.maxFallSpeed:
             self.velocity.y = self.maxFallSpeed
 
-        self.y += self.velocity.y
+        if self.x > window.get_width():
+            self.x = -self.width
+        elif self.x + self.width < 0:
+            self.x = window.get_width()
+        else:
+            self.y += self.velocity.y
+        
+        if self.y > window.get_height():
+            self.y = -self.height
 
         for tile in tileGroup:
             if collided(self, tile):
@@ -149,6 +158,59 @@ class Player:
             if collided(self, killTile):
                 loadLevel("map.txt")
                 return None
+
+    def draw(self, window):
+        pygame.draw.rect(window, self.color, (self.x, self.y, self.width, self.height))
+
+class Enemy:
+    def __init__(self, x, y, color, width, height):
+        self.x = x
+        self.y = y
+        self.color = color
+        self.width = width
+        self.height = height
+
+        self.speed = 2
+
+        self.direction = pygame.Vector2(random.choice([-1, 1]), 0)
+
+    def update(self):
+        if self.x > window.get_width():
+            self.x = -self.width
+        elif self.x + self.width < -self.width:
+            self.x = window.get_width()
+        elif self.y > window.get_height():
+            enemyGroup.remove(self)
+        elif self.y + self.height < -self.height:
+            enemyGroup.remove(self)
+
+        print(enemyGroup)
+
+        self.x += self.direction.x * self.speed
+        self.y += self.direction.y * self.speed
+
+        for tile in tileGroup:
+            if collided(self, tile):
+                if self.direction.x < 0: # left
+                    self.direction.x = 0
+                    self.direction.y = random.choice([-1, 1])
+                    self.x = tile.x + tile.width
+                elif self.direction.x > 0: # right
+                    self.direction.x = 0
+                    self.direction.y = random.choice([-1, 1])
+                    self.x = tile.x - self.width
+
+
+        for tile in tileGroup:
+            if collided(self, tile):
+                if self.direction.y < 0: # top
+                    self.direction.x = random.choice([-1, 1])
+                    self.direction.y = 0
+                    self.y = tile.y + tile.height
+                elif self.direction.y > 0: # bottom
+                    self.direction.x = random.choice([-1, 1])
+                    self.direction.y = 0
+                    self.y = tile.y - self.height
 
     def draw(self, window):
         pygame.draw.rect(window, self.color, (self.x, self.y, self.width, self.height))
@@ -181,6 +243,7 @@ def collided(thing1, thing2):
 
 def loadLevel(levelName):
     playerGroup.clear()
+    enemyGroup.clear()
     tileGroup.clear()
     launchTileGroup.clear()
     killTileGroup.clear()
@@ -198,8 +261,11 @@ def loadLevel(levelName):
             elif columnIterable == "K":
                 killTile = Tile(columnIndex * 36, rowIndex * 36 + 32, (255, 0, 0), 36, 4)
                 killTileGroup.append(killTile)
+            elif columnIterable == "E":
+                enemy = Enemy(columnIndex * 36, rowIndex * 36, (255, 0, 0), 36, 36)
+                enemyGroup.append(enemy)
             elif columnIterable == "P":
-                player = Player(columnIndex * 36, rowIndex * 36, (255, 0, 0), 12, 18)
+                player = Player(columnIndex * 36, rowIndex * 36, (0, 0, 255), 18, 18)
                 playerGroup.append(player)
     map.close()
 
@@ -223,6 +289,9 @@ def main():
         # update
         for player in playerGroup:
             player.update()
+        
+        for enemy in enemyGroup:
+            enemy.update()
 
         # draw
         window.fill((255, 255, 255))
@@ -238,6 +307,9 @@ def main():
 
         for killTile in killTileGroup:
             killTile.draw(window)
+        
+        for enemy in enemyGroup:
+            enemy.draw(window)
         
         clock.tick(FPS)
 
