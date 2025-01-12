@@ -16,7 +16,6 @@ FPS = 60
 
 playerGroup = []
 enemyGroup = []
-# bulletGroup = []
 tileGroup = []
 launchTileGroup = []
 killTileGroup = []
@@ -72,7 +71,10 @@ class Player:
             if self.velocity.x < self.maxSpeed:
                 self.velocity.x += self.speed
 
-        self.velocity.x /= self.friction
+        if -0.08 < self.velocity.x < 0.08:
+            self.velocity.x = 0
+        else:
+            self.velocity.x = self.velocity.x / self.friction
 
         if keys[pygame.K_SPACE] and not self.spaceHeld and not self.grounded and self.wallJumpBufferTimer > 0:
             self.spaceHeld = True
@@ -158,12 +160,14 @@ class Player:
 
         for killTile in killTileGroup:
             if collided(self, killTile):
-                loadLevel("levels/level1.txt")
+                goldTileGroup.clear()
+                level.current -= 1
                 return None
 
         for enemy in enemyGroup:
             if collided(self, enemy):
-                loadLevel("levels/level1.txt")
+                goldTileGroup.clear()
+                level.current -= 1
                 return None
 
         for goldTile in goldTileGroup:
@@ -183,8 +187,6 @@ class Enemy:
         self.height = height
 
         self.speed = 2.5
-        # self.shootTime = random.randint(10, 30) / 10
-        # self.shootTimer = self.shootTime
         self.direction = pygame.Vector2(random.choice([-1, 1]), 0)
 
     def update(self):
@@ -196,13 +198,6 @@ class Enemy:
             self.direction.y = -1
         elif self.y + self.height < -self.height:
             self.direction.y = 1
-
-        # if self.shootTimer <= 0:
-        #     bullet = Bullet(self.x + self.width / 2, self.y + self.height / 2, (255, 0, 0), 9, self.direction.y * random.choice([-1, 1]), self.direction.x * random.choice([-1, 1]))
-        #     bulletGroup.append(bullet)
-        #     self.shootTimer = self.shootTime
-        # else:
-        #     self.shootTimer -= 1 / 60
 
         self.x += self.direction.x * self.speed
         self.y += self.direction.y * self.speed
@@ -232,32 +227,6 @@ class Enemy:
     def draw(self, window):
         pygame.draw.rect(window, self.color, (self.x, self.y, self.width, self.height))
 
-# class Bullet:
-#     def __init__(self, x, y, color, radius, directionX, directionY):
-#         self.x = x
-#         self.y = y
-#         self.color = color
-#         self.radius = radius
-
-#         self.speed = 4
-#         self.direction = pygame.Vector2(directionX, directionY)
-
-#     def update(self):
-#         if self.x - self.radius > window.get_width():
-#             bulletGroup.remove(self)
-#         elif self.x + self.radius < -self.radius:
-#             bulletGroup.remove(self)
-#         elif self.y - self.radius > window.get_height():
-#             bulletGroup.remove(self)
-#         elif self.y + self.radius < -self.radius:
-#             bulletGroup.remove(self)
-
-#         self.x += self.direction.x * self.speed
-#         self.y += self.direction.y * self.speed
-    
-#     def draw(self, window):
-#         pygame.draw.circle(window, self.color, (self.x, self.y), self.radius)
-
 class Tile:
     def __init__(self, x, y, color, width, height):
         self.x = x
@@ -268,6 +237,42 @@ class Tile:
 
     def draw(self, window):
         pygame.draw.rect(window, self.color, (self.x, self.y, self.width, self.height))
+
+class Level:
+    def __init__(self):
+        self.current = -1
+
+    def clearLevel(self):
+        playerGroup.clear()
+        enemyGroup.clear()
+        tileGroup.clear()
+        launchTileGroup.clear()
+        killTileGroup.clear()
+
+    def loadLevel(self, levelName):
+        map = open(levelName, "r")
+        for rowIndex, rowIterable in enumerate(map.readlines()):
+            for columnIndex, columnIterable in enumerate(rowIterable):
+                if columnIterable == "T":
+                    n = random.randint(0, 148)
+                    tile = Tile(columnIndex * 36, rowIndex * 36, (n, n, n), 36, 36)
+                    tileGroup.append(tile)
+                elif columnIterable == "L":
+                    launchTile = Tile(columnIndex * 36, rowIndex * 36 + 28, (0, 255, 0), 36, 8)
+                    launchTileGroup.append(launchTile)
+                elif columnIterable == "K":
+                    killTile = Tile(columnIndex * 36, rowIndex * 36 + 32, (255, 0, 0), 36, 4)
+                    killTileGroup.append(killTile)
+                elif columnIterable == "G":
+                    goldTile = Tile(columnIndex * 36 + 9, rowIndex * 36 + 9, (255,215,0), 18, 18)
+                    goldTileGroup.append(goldTile)
+                elif columnIterable == "E":
+                    enemy = Enemy(columnIndex * 36, rowIndex * 36, (255, 0, 0), 36, 36)
+                    enemyGroup.append(enemy)
+                elif columnIterable == "P":
+                    player = Player(columnIndex * 36 + 9, rowIndex * 36 + 9, (0, 0, 255), 18, 18)
+                    playerGroup.append(player)
+        map.close()
 
 def collided(thing1, thing2):
     LeftEdge1 = thing1.x
@@ -284,83 +289,71 @@ def collided(thing1, thing2):
         return True
     return False
 
-def loadLevel(levelName):
-    playerGroup.clear()
-    enemyGroup.clear()
-    tileGroup.clear()
-    # bulletGroup.clear()
-    launchTileGroup.clear()
-    killTileGroup.clear()
-    goldTileGroup.clear()
-
-    map = open(levelName, "r")
-    for rowIndex, rowIterable in enumerate(map.readlines()):
-        for columnIndex, columnIterable in enumerate(rowIterable):
-            if columnIterable == "T":
-                n = random.randint(0, 148)
-                tile = Tile(columnIndex * 36, rowIndex * 36, (n, n, n), 36, 36)
-                tileGroup.append(tile)
-            elif columnIterable == "L":
-                launchTile = Tile(columnIndex * 36, rowIndex * 36 + 28, (0, 255, 0), 36, 8)
-                launchTileGroup.append(launchTile)
-            elif columnIterable == "K":
-                killTile = Tile(columnIndex * 36, rowIndex * 36 + 32, (255, 0, 0), 36, 4)
-                killTileGroup.append(killTile)
-            elif columnIterable == "G":
-                goldTile = Tile(columnIndex * 36 + 9, rowIndex * 36 + 9, (255,215,0), 18, 18)
-                goldTileGroup.append(goldTile)
-            elif columnIterable == "E":
-                enemy = Enemy(columnIndex * 36, rowIndex * 36, (255, 0, 0), 36, 36)
-                enemyGroup.append(enemy)
-            elif columnIterable == "P":
-                player = Player(columnIndex * 36, rowIndex * 36, (0, 0, 255), 18, 18)
-                playerGroup.append(player)
-    map.close()
+level = Level()
 
 def main():
-
-    level = 0
+    background = (255, 255, 255)
 
     while True:
+        print(len(goldTileGroup))
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 pygame.quit()
                 sys.exit()
-
             if event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_ESCAPE:
                     pygame.quit()
                     sys.exit()
 
-        if len(goldTileGroup) == 0:
-            if level == 0:
-                level = 1
-                loadLevel("levels/level1.txt")
-            elif level == 1:
-                level = 2
-                loadLevel("levels/level2.txt")
-            elif level == 2:
-                level = 3
-                loadLevel("levels/level3.txt")
-
         # update
         for player in playerGroup:
             player.update()
 
+            if player.velocity.x == 0 and player.velocity.y == 0: # stoped
+                g = background[1] - 5
+                b = background[2] - 5
+                background = (background[0], max(0, g), max(0, b))
+            else:
+                g = background[1] + 3
+                b = background[2] + 3
+                background = (background[0], min(255, g), min(255, b))
+
         for enemy in enemyGroup:
             enemy.update()
 
-        # for bullet in bulletGroup:
-        #     bullet.update()
+        if len(goldTileGroup) == 0:
+            if level.current == -1:
+                level.current = 0
+                level.clearLevel()
+                level.loadLevel("levels/level_menu.txt")
+            elif level.current == 0:
+                level.current = 1
+                level.clearLevel()
+                level.loadLevel("levels/level1.txt")
+            elif level.current == 1:
+                level.current = 2
+                level.clearLevel()
+                level.loadLevel("levels/level2.txt")
+            elif level.current == 2:
+                level.current = 3
+                level.clearLevel()
+                level.loadLevel("levels/level3.txt")
+            elif level.current == 3:
+                level.current = 4
+                level.clearLevel()
+                level.loadLevel("levels/level_successful.txt")
 
         # draw
-        window.fill((255, 255, 255))
+        window.fill(background)
 
         for player in playerGroup:
             player.draw(window)
         
         for tile in tileGroup:
             tile.draw(window)
+
+        for enemy in enemyGroup:
+            enemy.draw(window)
 
         for launchTile in launchTileGroup:
             launchTile.draw(window)
@@ -371,11 +364,6 @@ def main():
         for goldTile in goldTileGroup:
             goldTile.draw(window)
         
-        for enemy in enemyGroup:
-            enemy.draw(window)
-        
-        # for bullet in bulletGroup:
-        #     bullet.draw(window)
 
         clock.tick(FPS)
 
