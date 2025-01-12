@@ -16,10 +16,11 @@ FPS = 60
 
 playerGroup = []
 enemyGroup = []
-bulletGroup = []
+# bulletGroup = []
 tileGroup = []
 launchTileGroup = []
 killTileGroup = []
+goldTileGroup = []
 
 class Player:
     def __init__(self, x, y, color, width, height):
@@ -157,7 +158,17 @@ class Player:
 
         for killTile in killTileGroup:
             if collided(self, killTile):
-                loadLevel("map.txt")
+                loadLevel("levels/level1.txt")
+                return None
+
+        for enemy in enemyGroup:
+            if collided(self, enemy):
+                loadLevel("levels/level1.txt")
+                return None
+
+        for goldTile in goldTileGroup:
+            if collided(self, goldTile):
+                goldTileGroup.remove(goldTile)
                 return None
 
     def draw(self, window):
@@ -171,9 +182,9 @@ class Enemy:
         self.width = width
         self.height = height
 
-        self.speed = 2
-        self.shootTime = random.randint(10, 30) / 10
-        self.shootTimer = self.shootTime
+        self.speed = 2.5
+        # self.shootTime = random.randint(10, 30) / 10
+        # self.shootTimer = self.shootTime
         self.direction = pygame.Vector2(random.choice([-1, 1]), 0)
 
     def update(self):
@@ -182,16 +193,16 @@ class Enemy:
         elif self.x + self.width < -self.width:
             self.x = window.get_width()
         elif self.y > window.get_height():
-            enemyGroup.remove(self)
+            self.direction.y = -1
         elif self.y + self.height < -self.height:
-            enemyGroup.remove(self)
+            self.direction.y = 1
 
-        if self.shootTimer <= 0:
-            bullet = Bullet(self.x + self.width / 2, self.y + self.height / 2, (255, 0, 0), 9, self.direction.y * random.choice([-1, 1]), self.direction.x * random.choice([-1, 1]))
-            bulletGroup.append(bullet)
-            self.shootTimer = self.shootTime
-        else:
-            self.shootTimer -= 1 / 60
+        # if self.shootTimer <= 0:
+        #     bullet = Bullet(self.x + self.width / 2, self.y + self.height / 2, (255, 0, 0), 9, self.direction.y * random.choice([-1, 1]), self.direction.x * random.choice([-1, 1]))
+        #     bulletGroup.append(bullet)
+        #     self.shootTimer = self.shootTime
+        # else:
+        #     self.shootTimer -= 1 / 60
 
         self.x += self.direction.x * self.speed
         self.y += self.direction.y * self.speed
@@ -221,31 +232,31 @@ class Enemy:
     def draw(self, window):
         pygame.draw.rect(window, self.color, (self.x, self.y, self.width, self.height))
 
-class Bullet:
-    def __init__(self, x, y, color, radius, directionX, directionY):
-        self.x = x
-        self.y = y
-        self.color = color
-        self.radius = radius
+# class Bullet:
+#     def __init__(self, x, y, color, radius, directionX, directionY):
+#         self.x = x
+#         self.y = y
+#         self.color = color
+#         self.radius = radius
 
-        self.speed = 4
-        self.direction = pygame.Vector2(directionX, directionY)
+#         self.speed = 4
+#         self.direction = pygame.Vector2(directionX, directionY)
 
-    def update(self):
-        if self.x - self.radius > window.get_width():
-            bulletGroup.remove(self)
-        elif self.x + self.radius < -self.radius:
-            bulletGroup.remove(self)
-        elif self.y - self.radius > window.get_height():
-            bulletGroup.remove(self)
-        elif self.y + self.radius < -self.radius:
-            bulletGroup.remove(self)
+#     def update(self):
+#         if self.x - self.radius > window.get_width():
+#             bulletGroup.remove(self)
+#         elif self.x + self.radius < -self.radius:
+#             bulletGroup.remove(self)
+#         elif self.y - self.radius > window.get_height():
+#             bulletGroup.remove(self)
+#         elif self.y + self.radius < -self.radius:
+#             bulletGroup.remove(self)
 
-        self.x += self.direction.x * self.speed
-        self.y += self.direction.y * self.speed
+#         self.x += self.direction.x * self.speed
+#         self.y += self.direction.y * self.speed
     
-    def draw(self, window):
-        pygame.draw.circle(window, self.color, (self.x, self.y), self.radius)
+#     def draw(self, window):
+#         pygame.draw.circle(window, self.color, (self.x, self.y), self.radius)
 
 class Tile:
     def __init__(self, x, y, color, width, height):
@@ -277,8 +288,10 @@ def loadLevel(levelName):
     playerGroup.clear()
     enemyGroup.clear()
     tileGroup.clear()
+    # bulletGroup.clear()
     launchTileGroup.clear()
     killTileGroup.clear()
+    goldTileGroup.clear()
 
     map = open(levelName, "r")
     for rowIndex, rowIterable in enumerate(map.readlines()):
@@ -293,6 +306,9 @@ def loadLevel(levelName):
             elif columnIterable == "K":
                 killTile = Tile(columnIndex * 36, rowIndex * 36 + 32, (255, 0, 0), 36, 4)
                 killTileGroup.append(killTile)
+            elif columnIterable == "G":
+                goldTile = Tile(columnIndex * 36 + 9, rowIndex * 36 + 9, (255,215,0), 18, 18)
+                goldTileGroup.append(goldTile)
             elif columnIterable == "E":
                 enemy = Enemy(columnIndex * 36, rowIndex * 36, (255, 0, 0), 36, 36)
                 enemyGroup.append(enemy)
@@ -303,10 +319,7 @@ def loadLevel(levelName):
 
 def main():
 
-    loadLevel("map.txt")
-
-    chargeAmount = 1
-    maxChargeAmount = 1
+    level = 0
 
     while True:
         for event in pygame.event.get():
@@ -318,38 +331,27 @@ def main():
                 if event.key == pygame.K_ESCAPE:
                     pygame.quit()
                     sys.exit()
-                if chargeAmount >= 0.35:
-                    if event.key == pygame.K_RIGHT:
-                        bullet = Bullet(player.x + player.width / 2, player.y + player.height / 2, (0, 0, 255), 9, 1, 0)
-                        bulletGroup.append(bullet)
-                        chargeAmount -= 0.35
-                    elif event.key == pygame.K_LEFT:
-                        bullet = Bullet(player.x + player.width / 2, player.y + player.height / 2, (0, 0, 255), 9, -1, 0)
-                        bulletGroup.append(bullet)
-                        chargeAmount -= 0.35
-                    elif event.key == pygame.K_UP:
-                        bullet = Bullet(player.x + player.width / 2, player.y + player.height / 2, (0, 0, 255), 9, 0, -1)
-                        bulletGroup.append(bullet)
-                        chargeAmount -= 0.35
-                    elif event.key == pygame.K_DOWN:
-                        bullet = Bullet(player.x + player.width / 2, player.y + player.height / 2, (0, 0, 255), 9, 0, 1)
-                        bulletGroup.append(bullet)
-                        chargeAmount -= 0.35
+
+        if len(goldTileGroup) == 0:
+            if level == 0:
+                level = 1
+                loadLevel("levels/level1.txt")
+            elif level == 1:
+                level = 2
+                loadLevel("levels/level2.txt")
+            elif level == 2:
+                level = 3
+                loadLevel("levels/level3.txt")
 
         # update
-        if chargeAmount < maxChargeAmount:
-            chargeAmount += 1 / 60
-        else:
-            chargeAmount = 1
-
         for player in playerGroup:
             player.update()
 
         for enemy in enemyGroup:
             enemy.update()
 
-        for bullet in bulletGroup:
-            bullet.update()
+        # for bullet in bulletGroup:
+        #     bullet.update()
 
         # draw
         window.fill((255, 255, 255))
@@ -365,15 +367,15 @@ def main():
 
         for killTile in killTileGroup:
             killTile.draw(window)
+
+        for goldTile in goldTileGroup:
+            goldTile.draw(window)
         
         for enemy in enemyGroup:
             enemy.draw(window)
         
-        for bullet in bulletGroup:
-            bullet.draw(window)
-        
-        pygame.draw.rect(window, (0, 0, 0), (0, 0, window.get_width() * chargeAmount, 12))
-        pygame.draw.rect(window, (0, 0, 0), (0, 12, window.get_width(), 4))
+        # for bullet in bulletGroup:
+        #     bullet.draw(window)
 
         clock.tick(FPS)
 
