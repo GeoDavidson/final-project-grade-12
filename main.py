@@ -295,7 +295,6 @@ def main():
     background = (255, 255, 255)
 
     while True:
-        print(len(goldTileGroup))
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 pygame.quit()
@@ -309,14 +308,12 @@ def main():
         for player in playerGroup:
             player.update()
 
-            if player.velocity.x == 0 and player.velocity.y == 0: # stoped
-                g = background[1] - 5
-                b = background[2] - 5
-                background = (background[0], max(0, g), max(0, b))
+            if player.velocity.x == 0 and player.velocity.y == 0:
+                value = background[1] - 5
+                background = (background[0], max(0, value), max(0, value))
             else:
-                g = background[1] + 3
-                b = background[2] + 3
-                background = (background[0], min(255, g), min(255, b))
+                value = background[1] + 3
+                background = (background[0], min(255, value), min(255, value))
 
         for enemy in enemyGroup:
             enemy.update()
