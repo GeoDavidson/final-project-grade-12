@@ -1,3 +1,6 @@
+# https://pixelartmaker.com/art/b40bbae4caf5630
+
+import os
 import random
 import sys
 
@@ -5,14 +8,19 @@ import pygame
 
 pygame.init()
 
-WINDOW_WIDTH = 36 * 21
-WINDOW_HEIGHT = 36 * 15
+WINDOW_WIDTH = 36 * 21 # 756
+WINDOW_HEIGHT = 36 * 15 # 540
 
 window = pygame.display.set_mode((WINDOW_WIDTH, WINDOW_HEIGHT))
 pygame.display.set_caption("Gliding Game")
 
 clock = pygame.time.Clock()
 FPS = 60
+
+menu = pygame.image.load(os.path.join("img", "menu.png")).convert_alpha()
+menu.set_alpha(112)
+
+font = pygame.font.Font(os.path.join("font", "PixelifySans-Regular.ttf"), 36)
 
 playerGroup = []
 enemyGroup = []
@@ -343,6 +351,9 @@ def main():
         # draw
         window.fill(background)
 
+        if level.current == 0:
+            window.blit(menu, (0, 0))
+
         for player in playerGroup:
             player.draw(window)
         
@@ -361,6 +372,8 @@ def main():
         for goldTile in goldTileGroup:
             goldTile.draw(window)
         
+        value = abs(background[1] - 255)
+        window.blit(font.render(f"{level.current}", True, (background[0], value, value)), (7, -4))
 
         clock.tick(FPS)
 
