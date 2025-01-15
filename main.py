@@ -20,7 +20,8 @@ FPS = 60
 menu = pygame.image.load(os.path.join("img", "menu.png")).convert_alpha()
 menu.set_alpha(112)
 
-font = pygame.font.Font(os.path.join("font", "PixelifySans-Regular.ttf"), 36)
+# font = pygame.font.Font(os.path.join("font", "PixelifySans-Regular.ttf"), 36)
+font = pygame.font.Font(None, 36)
 
 playerGroup = []
 enemyGroup = []
@@ -200,11 +201,11 @@ class Enemy:
     def update(self):
         if self.x > window.get_width():
             self.x = -self.width
-        elif self.x + self.width < -self.width:
+        elif self.x + self.width < 0:
             self.x = window.get_width()
         elif self.y > window.get_height():
             self.direction.y = -1
-        elif self.y + self.height < -self.height:
+        elif self.y + self.height < 0:
             self.direction.y = 1
 
         self.x += self.direction.x * self.speed
@@ -327,26 +328,9 @@ def main():
             enemy.update()
 
         if len(goldTileGroup) == 0:
-            if level.current == -1:
-                level.current = 0
-                level.clearLevel()
-                level.loadLevel("levels/level_menu.txt")
-            elif level.current == 0:
-                level.current = 1
-                level.clearLevel()
-                level.loadLevel("levels/level1.txt")
-            elif level.current == 1:
-                level.current = 2
-                level.clearLevel()
-                level.loadLevel("levels/level2.txt")
-            elif level.current == 2:
-                level.current = 3
-                level.clearLevel()
-                level.loadLevel("levels/level3.txt")
-            elif level.current == 3:
-                level.current = 4
-                level.clearLevel()
-                level.loadLevel("levels/level_successful.txt")
+            level.current += 1
+            level.clearLevel()
+            level.loadLevel(f"levels/level-{level.current}.txt")
 
         # draw
         window.fill(background)
@@ -356,7 +340,7 @@ def main():
 
         for player in playerGroup:
             player.draw(window)
-        
+
         for tile in tileGroup:
             tile.draw(window)
 
@@ -371,9 +355,11 @@ def main():
 
         for goldTile in goldTileGroup:
             goldTile.draw(window)
-        
+
         value = abs(background[1] - 255)
-        window.blit(font.render(f"{level.current}", True, (background[0], value, value)), (7, -4))
+        levelText = font.render(f"{level.current}", True, (background[0], value, value))
+        levelTextRect = levelText.get_rect(center=(18, 18))
+        window.blit(levelText, levelTextRect)
 
         clock.tick(FPS)
 
