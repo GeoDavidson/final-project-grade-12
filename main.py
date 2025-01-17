@@ -1,5 +1,3 @@
-# https://pixelartmaker.com/art/b40bbae4caf5630
-
 import os
 import random
 import sys
@@ -20,7 +18,6 @@ FPS = 60
 menu = pygame.image.load(os.path.join("img", "menu.png")).convert_alpha()
 menu.set_alpha(112)
 
-# font = pygame.font.Font(os.path.join("font", "PixelifySans-Regular.ttf"), 36)
 font = pygame.font.Font(None, 36)
 
 playerGroup = []
@@ -30,13 +27,20 @@ launchTileGroup = []
 killTileGroup = []
 goldTileGroup = []
 
-class Player:
+class Sprite:
     def __init__(self, x, y, color, width, height):
         self.x = x
         self.y = y
         self.color = color
         self.width = width
         self.height = height
+
+    def draw(self, window):
+        pygame.draw.rect(window, self.color, (self.x, self.y, self.width, self.height))
+
+class Player(Sprite):
+    def __init__(self, x, y, color, width, height):
+        super().__init__(x, y, color, width, height)
 
         self.speed = 2
         self.maxSpeed = 3.8
@@ -184,16 +188,10 @@ class Player:
                 goldTileGroup.remove(goldTile)
                 return None
 
-    def draw(self, window):
-        pygame.draw.rect(window, self.color, (self.x, self.y, self.width, self.height))
 
-class Enemy:
+class Enemy(Sprite):
     def __init__(self, x, y, color, width, height):
-        self.x = x
-        self.y = y
-        self.color = color
-        self.width = width
-        self.height = height
+        super().__init__(x, y, color, width, height)
 
         self.speed = 2.5
         self.direction = pygame.Vector2(random.choice([-1, 1]), 0)
@@ -233,20 +231,6 @@ class Enemy:
                     self.direction.y = 0
                     self.y = tile.y - self.height
 
-    def draw(self, window):
-        pygame.draw.rect(window, self.color, (self.x, self.y, self.width, self.height))
-
-class Tile:
-    def __init__(self, x, y, color, width, height):
-        self.x = x
-        self.y = y
-        self.color = color
-        self.width = width
-        self.height = height
-
-    def draw(self, window):
-        pygame.draw.rect(window, self.color, (self.x, self.y, self.width, self.height))
-
 class Level:
     def __init__(self):
         self.current = -1
@@ -264,16 +248,16 @@ class Level:
             for columnIndex, columnIterable in enumerate(rowIterable):
                 if columnIterable == "T":
                     n = random.randint(0, 148)
-                    tile = Tile(columnIndex * 36, rowIndex * 36, (n, n, n), 36, 36)
+                    tile = Sprite(columnIndex * 36, rowIndex * 36, (n, n, n), 36, 36)
                     tileGroup.append(tile)
                 elif columnIterable == "L":
-                    launchTile = Tile(columnIndex * 36, rowIndex * 36 + 28, (0, 255, 0), 36, 8)
+                    launchTile = Sprite(columnIndex * 36, rowIndex * 36 + 28, (0, 255, 0), 36, 8)
                     launchTileGroup.append(launchTile)
                 elif columnIterable == "K":
-                    killTile = Tile(columnIndex * 36, rowIndex * 36 + 32, (255, 0, 0), 36, 4)
+                    killTile = Sprite(columnIndex * 36, rowIndex * 36 + 32, (255, 0, 0), 36, 4)
                     killTileGroup.append(killTile)
                 elif columnIterable == "G":
-                    goldTile = Tile(columnIndex * 36 + 9, rowIndex * 36 + 9, (255,215,0), 18, 18)
+                    goldTile = Sprite(columnIndex * 36 + 9, rowIndex * 36 + 9, (255,215,0), 18, 18)
                     goldTileGroup.append(goldTile)
                 elif columnIterable == "E":
                     enemy = Enemy(columnIndex * 36, rowIndex * 36, (255, 0, 0), 36, 36)
